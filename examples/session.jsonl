@@ -1,0 +1,8 @@
+{"op":"create","fields":[{"path":"sample","type":"int"},{"path":"meta","type":"struct"},{"path":"meta.site","type":"str","default":"unknown"}]}
+{"op":"append","branch":"main","request":"first","rows":[{"sample":1,"meta":{"site":"A"}}]}
+{"op":"fork","snapshot":2,"branch":"review"}
+{"op":"alter","branch":"review","changes":[{"op":"add","path":"quality","type":"int","default":7}]}
+{"op":"append","branch":"review","request":"review","rows":[{"sample":2,"quality":null}]}
+{"op":"merge","target":"main","source":"review"}
+{"op":"read","snapshot":5}
+{"op":"read","snapshot":2}
