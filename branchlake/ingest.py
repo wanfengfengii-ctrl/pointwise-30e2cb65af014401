@@ -55,7 +55,9 @@ def append(catalog, branch, request, rows):
             'INSERT INTO batches(writer,payload) VALUES(?,?)', (head, encode(encoded_rows))
         )
         batch = cursor.lastrowid
-        new_head = catalog.publish(branch, [head], snapshot['schema'], snapshot['batches'] + [batch])
+        new_head = catalog.publish(branch, [head], snapshot['schema'],
+                                   snapshot['batches'] + [batch],
+                                   snapshot['corrections'])
         catalog.db.execute('INSERT INTO receipts VALUES(?,?,?,?,?)',
                            (branch, request, fingerprint, new_head, batch))
     return dict(snapshot=new_head, batch=batch, request=request)

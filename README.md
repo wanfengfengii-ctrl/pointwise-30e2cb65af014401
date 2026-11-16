@@ -52,6 +52,8 @@ merge(target, source) 返回 {snapshot}，只移动 target。以快照 DAG 的�
 
 read(snapshot) 返回该固定模式下的嵌套 JSON 行数组，字段全部出现。返回对象由调用者持有，修改它们不影响持久化数据。字段创建、批次、回执、快照及目标分支头在 SQLite 单次事务内发布；失败回滚，历史结果不变。publish_hook(stage, snapshot) 是可选的发布观察入口，stage 为 snapshot_inserted 或 head_updated，在提交前调用；抛出的异常原样传播并回滚。钩子不得重入写入，用于嵌入方发布观察及回滚检查。
 
+read_rows(snapshot) 返回 `[{source: [batch, index], row: 完整公开行}, ...]`，地址稳定、只含未撤回行；read 恒等于其 row 列表。correct(branch, request, changes) 对指定来源做带旧像校验的 patch 或 remove，返回 `{snapshot, request}`。更正按来源地址与字段创建身份保存，随分支继承并在 merge 中按相对共同祖先的有效状态三方合流。完整规则见 CORRECTIONS.md。
+
 ValidationError 表示格式、字段、值或参数非法；NotFoundError 表示未知快照或分支；ConflictError 表示重复初始化、分支重名、请求冲突或不可合并模式。SQLite/I/O/钩子等非业务异常原样传播。失败不产生可见的部分业务成果。
 
 ## JSON CLI
@@ -62,4 +64,4 @@ examples/session.jsonl 是有限正常输入；demo 展示两支演进、NULL、
 
 ## 实现职责
 
-branchlake/schema.py 管理字段创建身份、层级、默认值及模式演进；ingest.py 校验并保存稀疏身份载荷及回执；catalog.py 持有 SQLite 目录、分支头和事务；merge.py 裁决共同祖先及模式合流；reader.py 按固定快照输出字段。它们经 Lake 的公开方法形成完整读写闭环。批次目前整值编码和解码，读取整值物化；不含行更正、查询优化、导出格式转换、分布式协调或对象回收。
+branchlake/schema.py 管理字段创建身份、层级、默认值及模式演进；ingest.py 校验并保存稀疏身份载荷及回执；catalog.py 持有 SQLite 目录、分支头和事务；corrections.py 校验并保存来源更正/撤回、按快照投影行；merge.py 裁决共同祖先及模式与更正数据合流；reader.py 按固定快照输出字段。它们经 Lake 的公开方法形成完整读写闭环。批次整值编码和解码，读取整值物化；不含查询优化、导出格式转换、分布式协调或对象回收。
